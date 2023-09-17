@@ -73,6 +73,10 @@ public class ValuteTypesServices {
         valuteTypesRepository.saveAll(allXmlValutes.stream().map(ValuteType::new).toList());
     }
 
+    public List<ValuteType> getValuteTypes() {
+        return valuteTypesRepository.findAll();
+    }
+
     public byte[] getValuteTypesXml() {
         byte[] bytes = {};
         try (Workbook workbook = new XSSFWorkbook()) {

@@ -1,5 +1,6 @@
 package com.valute.valute_app.controllers;
 
+import com.valute.valute_app.entities.ValuteType;
 import com.valute.valute_app.services.ValuteTypesServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/valute_types")
@@ -27,6 +30,11 @@ public class ValuteTypesController {
     @GetMapping("/delete_all_valute_types")
     public void deleteAllValuteTypes() {
         valuteTypesServices.deleteAll();
+    }
+
+    @GetMapping("/get_valute_types")
+    public List<ValuteType> getValuteTypes() {
+        return valuteTypesServices.getValuteTypes();
     }
 
     @GetMapping("/get_valute_types_xml")
