@@ -43,24 +43,42 @@ public class ValuteCursesService {
             this.taskLevel = taskLevel;
         }
 
+        private Map<String, Integer> calendarDiff(Calendar startC, Calendar endC){
+            Map<String, Integer> diff = new HashMap<>();
+            int yearsDiff = endC.get(Calendar.YEAR) - startC.get(Calendar.YEAR);
+            int monthsDiff = endC.get(Calendar.MONTH) - startC.get(Calendar.MONTH);
+            int daysDiff = endC.get(Calendar.DAY_OF_MONTH) - startC.get(Calendar.DAY_OF_MONTH);
+            if(daysDiff < 0){
+                monthsDiff--;
+                daysDiff += endC.getActualMaximum(Calendar.DAY_OF_MONTH);
+            }
+            if (monthsDiff < 0){
+                yearsDiff--;
+                monthsDiff += endC.getActualMaximum(Calendar.MONTH);
+            }
+            if (yearsDiff == 1){
+                yearsDiff--;
+                monthsDiff += endC.getActualMaximum(Calendar.MONTH);
+            }
+            if (monthsDiff == 1){
+                monthsDiff--;
+                daysDiff += endC.getActualMaximum(Calendar.DAY_OF_MONTH);
+            }
+            diff.put("years", yearsDiff);
+            diff.put("months", monthsDiff);
+            diff.put("days", daysDiff);
+            return  diff;
+        }
+
         @Override
         protected List<ValuteCurseListXml> compute() {
             Calendar startCalendar = Calendar.getInstance();
             startCalendar.setTime(startDate);
             Calendar endCalendar = Calendar.getInstance();
             endCalendar.setTime(endDate);
-            int yearsDiff = endCalendar.get(Calendar.YEAR) - startCalendar.get(Calendar.YEAR);
-            int monthsDiff = endCalendar.get(Calendar.MONTH) - startCalendar.get(Calendar.MONTH);
-            if (monthsDiff < 0){
-                yearsDiff--;
-                monthsDiff += 12;
-            }
-            int daysDiff = endCalendar.get(Calendar.DAY_OF_MONTH) - startCalendar.get(Calendar.DAY_OF_MONTH);
-            if(daysDiff < 0){
-                monthsDiff--;
-                daysDiff += endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-            }
-            if (taskLevel < 3 || (daysDiff < 8 && monthsDiff == 0 && yearsDiff == 0)) {
+            Map<String, Integer> cDiff = calendarDiff(startCalendar, endCalendar);
+            if (taskLevel < 3 || (cDiff.get("days") < 8 && cDiff.get("months") == 0
+                    && cDiff.get("years") == 0)) {
                 List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
                 ValuteCurseListXml chunkOfXmlCurses;
                 OkHttpClient client = new OkHttpClient();
@@ -87,11 +105,11 @@ public class ValuteCursesService {
             } else {
                 Calendar partCalendar = (Calendar) startCalendar.clone();
                 partCalendar.add(Calendar.YEAR,
-                        partCalendar.get(Calendar.YEAR) + yearsDiff / 2);
+                        partCalendar.get(Calendar.YEAR) + cDiff.get("years") / 2);
                 partCalendar.add(Calendar.MONTH,
-                        partCalendar.get(Calendar.MONTH) + monthsDiff / 2);
+                        partCalendar.get(Calendar.MONTH) + cDiff.get("months") / 2);
                 partCalendar.add(Calendar.DAY_OF_MONTH,
-                        partCalendar.get(Calendar.DAY_OF_MONTH) + daysDiff / 2);
+                        partCalendar.get(Calendar.DAY_OF_MONTH) + cDiff.get("days") / 2);
                 ValuteCursesTask subTask1 = new ValuteCursesTask(startCalendar.getTime(),
                         partCalendar.getTime(), taskLevel + 1);
                 ValuteCursesTask subTask2 = new ValuteCursesTask(partCalendar.getTime(),
