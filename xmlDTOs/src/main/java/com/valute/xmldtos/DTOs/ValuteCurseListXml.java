@@ -25,7 +25,6 @@ public class ValuteCurseListXml {
 
         public DateAdapter() {
             dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-            dateFormat.setTimeZone(TimeZone.getTimeZone("MSK"));
         }
 
         @Override

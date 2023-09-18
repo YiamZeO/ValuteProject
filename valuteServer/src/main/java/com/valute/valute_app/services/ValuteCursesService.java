@@ -79,11 +79,12 @@ public class ValuteCursesService {
     public List<Map<String, Object>> getValuteCursesBySpec(ValuteCursesSpecDto valuteCursesSpecDto) {
         List<ValuteCurs> curses = valuteCursesRepository.findAll(createSpec(valuteCursesSpecDto));
         List<Map<String, Object>> res = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         curses.stream().forEach(c -> {
             Map<String, Object> el = new HashMap<>();
             el.put("id", c.getValuteCursCompositeKey().getId());
             el.put("name", c.getValute().getName());
-            el.put("date", c.getValuteCursCompositeKey().getDate());
+            el.put("date", dateFormat.format(c.getValuteCursCompositeKey().getDate()));
             el.put("value", c.getValue());
             res.add(el);
         });
@@ -139,7 +140,6 @@ public class ValuteCursesService {
     private void createDataRowsValuteCurses(Sheet sheet, List<ValuteCurs> valuteCurses) {
         int rowNum = 1;
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("MSK"));
         CellStyle dataCellStyle = sheet.getWorkbook().createCellStyle();
         dataCellStyle.setBorderLeft(BorderStyle.THIN);
         dataCellStyle.setLeftBorderColor(IndexedColors.BLACK.getIndex());
