@@ -139,6 +139,7 @@ public class ValuteCursesService {
     private void createDataRowsValuteCurses(Sheet sheet, List<ValuteCurs> valuteCurses) {
         int rowNum = 1;
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("MSK"));
         CellStyle dataCellStyle = sheet.getWorkbook().createCellStyle();
         dataCellStyle.setBorderLeft(BorderStyle.THIN);
         dataCellStyle.setLeftBorderColor(IndexedColors.BLACK.getIndex());

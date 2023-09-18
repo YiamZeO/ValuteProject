@@ -35,10 +35,12 @@ public class ValuteCursesService {
 
         private final Date startDate;
         private final Date endDate;
+        private int taskLevel;
 
-        public ValuteCursesTask(Date startDate, Date endDate) {
+        public ValuteCursesTask(Date startDate, Date endDate, int taskLevel) {
             this.startDate = startDate;
             this.endDate = endDate;
+            this.taskLevel = taskLevel;
         }
 
         @Override
@@ -51,7 +53,7 @@ public class ValuteCursesService {
             int monthsDiff = endCalendar.get(Calendar.MONTH) - startCalendar.get(Calendar.MONTH);
             int daysDiff = endCalendar.get(Calendar.DAY_OF_MONTH) - startCalendar.get(Calendar.DAY_OF_MONTH);
             int totalDaysDiff = yearsDiff * 12 + monthsDiff * 30 + daysDiff;
-            if (totalDaysDiff <= 30) {
+            if (taskLevel < 3) {
                 List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
                 ValuteCurseListXml chunkOfXmlCurses;
                 OkHttpClient client = new OkHttpClient();
@@ -79,8 +81,10 @@ public class ValuteCursesService {
                 Calendar partCalendar = (Calendar) startCalendar.clone();
                 partCalendar.add(Calendar.DAY_OF_MONTH,
                         partCalendar.get(Calendar.DAY_OF_MONTH) + totalDaysDiff / 2);
-                ValuteCursesTask subTask1 = new ValuteCursesTask(startCalendar.getTime(), partCalendar.getTime());
-                ValuteCursesTask subTask2 = new ValuteCursesTask(partCalendar.getTime(), endCalendar.getTime());
+                ValuteCursesTask subTask1 = new ValuteCursesTask(startCalendar.getTime(),
+                        partCalendar.getTime(), taskLevel + 1);
+                ValuteCursesTask subTask2 = new ValuteCursesTask(partCalendar.getTime(),
+                        endCalendar.getTime(), taskLevel + 1);
                 subTask1.fork();
                 subTask2.fork();
                 List<ValuteCurseListXml> allXmlCurses = subTask1.join();
@@ -92,8 +96,8 @@ public class ValuteCursesService {
 
     public List<ValuteCurseListXml> downloadValuteCurses(Date startDate, Date endDate) {
         List<ValuteCurseListXml> allXmlCurses;
-        try (ForkJoinPool forkJoinPool = new ForkJoinPool(8)) {
-            ValuteCursesTask task = new ValuteCursesTask(startDate, endDate);
+        try (ForkJoinPool forkJoinPool = new ForkJoinPool()) {
+            ValuteCursesTask task = new ValuteCursesTask(startDate, endDate, 0);
             allXmlCurses = forkJoinPool.invoke(task);
             return allXmlCurses;
         }
