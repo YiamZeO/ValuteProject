@@ -7,13 +7,17 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="valute_app" />
+        <module name="valuteDownloadService" />
+        <module name="valuteServer" />
+        <module name="xmlDTOs" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="valute_app" options="-parameters" />
+      <module name="valuteDownloadService" options="-parameters" />
+      <module name="valuteServer" options="-parameters" />
+      <module name="xmlDTOs" options="-parameters" />
     </option>
   </component>
 </project>
