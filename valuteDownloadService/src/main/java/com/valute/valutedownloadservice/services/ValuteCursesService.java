@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
 @Service
 public class ValuteCursesService {
@@ -29,30 +31,71 @@ public class ValuteCursesService {
         }
     }
 
-    public List<ValuteCurseListXml> downloadValuteCurses(Date startDate, Date endDate) {
-        List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
-        ValuteCurseListXml chunkOfXmlCurses;
-        Calendar date_req_start = Calendar.getInstance();
-        Calendar date_req_end = Calendar.getInstance();
-        date_req_start.setTime(startDate);
-        date_req_end.setTime(endDate);
-        OkHttpClient client = new OkHttpClient();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        while (date_req_start.before(date_req_end) || date_req_start.equals(date_req_end)) {
-            HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.
-                    parse("https://www.cbr.ru/scripts/XML_daily.asp")).newBuilder();
-            urlBuilder.addQueryParameter("date_req", dateFormat.format(date_req_start.getTime()));
-            String url = urlBuilder.build().toString();
-            Request request = new Request.Builder().url(url).build();
-            try (Response response = client.newCall(request).execute()) {
-                chunkOfXmlCurses = parseXMLResponse(response);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-            allXmlCurses.add(chunkOfXmlCurses);
-            date_req_start.set(Calendar.DAY_OF_MONTH, date_req_start.get(Calendar.DAY_OF_MONTH) + 1);
+    private class ValuteCursesTask extends RecursiveTask<List<ValuteCurseListXml>> {
+
+        private final Date startDate;
+        private final Date endDate;
+
+        public ValuteCursesTask(Date startDate, Date endDate) {
+            this.startDate = startDate;
+            this.endDate = endDate;
         }
-        return allXmlCurses;
+
+        @Override
+        protected List<ValuteCurseListXml> compute() {
+            Calendar startCalendar = Calendar.getInstance();
+            startCalendar.setTime(startDate);
+            Calendar endCalendar = Calendar.getInstance();
+            endCalendar.setTime(endDate);
+            int yearsDiff = endCalendar.get(Calendar.YEAR) - startCalendar.get(Calendar.YEAR);
+            int monthsDiff = endCalendar.get(Calendar.MONTH) - startCalendar.get(Calendar.MONTH);
+            int daysDiff = endCalendar.get(Calendar.DAY_OF_MONTH) - startCalendar.get(Calendar.DAY_OF_MONTH);
+            int totalDaysDiff = yearsDiff * 12 + monthsDiff * 30 + daysDiff;
+            if (totalDaysDiff <= 30) {
+                List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
+                ValuteCurseListXml chunkOfXmlCurses;
+                OkHttpClient client = new OkHttpClient();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                while (startCalendar.before(endCalendar) || startCalendar.equals(endCalendar)) {
+                    HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.
+                            parse("https://www.cbr.ru/scripts/XML_daily.asp")).newBuilder();
+                    urlBuilder.addQueryParameter("date_req", dateFormat.format(startCalendar.getTime()));
+                    String url = urlBuilder.build().toString();
+                    Request request = new Request.Builder().url(url).build();
+                    try (Response response = client.newCall(request).execute()) {
+                        chunkOfXmlCurses = parseXMLResponse(response);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return new ArrayList<>();
+                    }
+                    if (Objects.requireNonNull(chunkOfXmlCurses).getValuteCursXmls().stream()
+                            .anyMatch(a -> a.getValue() == null))
+                        System.out.println(chunkOfXmlCurses);
+                    allXmlCurses.add(chunkOfXmlCurses);
+                    startCalendar.set(Calendar.DAY_OF_MONTH, startCalendar.get(Calendar.DAY_OF_MONTH) + 1);
+                }
+                return allXmlCurses;
+            } else {
+                Calendar partCalendar = (Calendar) startCalendar.clone();
+                partCalendar.add(Calendar.DAY_OF_MONTH,
+                        partCalendar.get(Calendar.DAY_OF_MONTH) + totalDaysDiff / 2);
+                ValuteCursesTask subTask1 = new ValuteCursesTask(startCalendar.getTime(), partCalendar.getTime());
+                ValuteCursesTask subTask2 = new ValuteCursesTask(partCalendar.getTime(), endCalendar.getTime());
+                subTask1.fork();
+                subTask2.fork();
+                List<ValuteCurseListXml> allXmlCurses = subTask1.join();
+                allXmlCurses.addAll(subTask2.join());
+                return allXmlCurses;
+            }
+        }
+    }
+
+    public List<ValuteCurseListXml> downloadValuteCurses(Date startDate, Date endDate) {
+        List<ValuteCurseListXml> allXmlCurses;
+        try (ForkJoinPool forkJoinPool = new ForkJoinPool(8)) {
+            ValuteCursesTask task = new ValuteCursesTask(startDate, endDate);
+            allXmlCurses = forkJoinPool.invoke(task);
+            return allXmlCurses;
+        }
     }
 }

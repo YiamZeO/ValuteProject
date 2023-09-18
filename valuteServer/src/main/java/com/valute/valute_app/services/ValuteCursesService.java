@@ -20,9 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class ValuteCursesService {
@@ -52,7 +51,9 @@ public class ValuteCursesService {
     @Transactional
     public void downloadValuteCurses(Date startDate, Date endDate) {
         List<ValuteCurseListXml> allXmlCurses;
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .readTimeout(0, TimeUnit.MILLISECONDS)
+                .build();;
         HttpUrl.Builder urlBuilder = (Objects.requireNonNull(HttpUrl.
                 parse("http://localhost:8081/valute_curses/download_valute_curses"))).newBuilder();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -75,8 +76,18 @@ public class ValuteCursesService {
                 .flatMap(List::stream).toList());
     }
 
-    public List<ValuteCurs> getValuteCursesBySpec(ValuteCursesSpecDto valuteCursesSpecDto) {
-        return valuteCursesRepository.findAll(createSpec(valuteCursesSpecDto));
+    public List<Map<String, Object>> getValuteCursesBySpec(ValuteCursesSpecDto valuteCursesSpecDto) {
+        List<ValuteCurs> curses = valuteCursesRepository.findAll(createSpec(valuteCursesSpecDto));
+        List<Map<String, Object>> res = new ArrayList<>();
+        curses.stream().forEach(c -> {
+            Map<String, Object> el = new HashMap<>();
+            el.put("id", c.getValuteCursCompositeKey().getId());
+            el.put("name", c.getValute().getName());
+            el.put("date", c.getValuteCursCompositeKey().getDate());
+            el.put("value", c.getValue());
+            res.add(el);
+        });
+        return res;
     }
 
     public byte[] getValuteCursesBySpecXml(ValuteCursesSpecDto valuteCursesSpecDto) {

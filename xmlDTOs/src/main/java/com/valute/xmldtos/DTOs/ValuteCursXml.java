@@ -21,7 +21,11 @@ public class ValuteCursXml {
     private Double value;
 
     public static class DoubleAdapter extends XmlAdapter<String, Double> {
-        private static final NumberFormat numberFormat = NumberFormat.getInstance(Locale.getDefault());
+        private final NumberFormat numberFormat;
+
+        public DoubleAdapter() {
+            numberFormat = NumberFormat.getInstance(Locale.getDefault());
+        }
 
         @Override
         public Double unmarshal(String value) throws Exception {

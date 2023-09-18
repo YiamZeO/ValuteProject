@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/valute_curses")
@@ -39,5 +41,13 @@ public class ValuteCursesController {
         headers.setContentDispositionFormData("attachment", "Valute_curses_table.xlsx");
         return ResponseEntity.ok().headers(headers).
                 body(valuteCursesService.getValuteCursesBySpecXml(valuteCursesSpecDto));
+    }
+
+    @GetMapping("/get_valute_curses")
+    public List<Map<String, Object>> getValuteCurses(@RequestBody ValuteCursesSpecDto valuteCursesSpecDto) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("attachment", "Valute_curses_table.xlsx");
+        return valuteCursesService.getValuteCursesBySpec(valuteCursesSpecDto);
     }
 }
