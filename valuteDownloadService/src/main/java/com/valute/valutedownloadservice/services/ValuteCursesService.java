@@ -53,7 +53,7 @@ public class ValuteCursesService {
             int monthsDiff = endCalendar.get(Calendar.MONTH) - startCalendar.get(Calendar.MONTH);
             int daysDiff = endCalendar.get(Calendar.DAY_OF_MONTH) - startCalendar.get(Calendar.DAY_OF_MONTH);
             int totalDaysDiff = yearsDiff * 12 + monthsDiff * 30 + daysDiff;
-            if (taskLevel < 3) {
+            if (taskLevel < 3 || totalDaysDiff < 8) {
                 List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
                 ValuteCurseListXml chunkOfXmlCurses;
                 OkHttpClient client = new OkHttpClient();
