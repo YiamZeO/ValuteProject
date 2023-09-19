@@ -171,7 +171,7 @@ public class ValuteCursesService {
     }
 
     @Async
-    @Scheduled(fixedRate = 2000)
+    //@Scheduled(fixedRate = 2000)
     protected void scheduleDownloadingData(){
         downloadValuteCurses(dateC.getTime(), dateC.getTime());
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
