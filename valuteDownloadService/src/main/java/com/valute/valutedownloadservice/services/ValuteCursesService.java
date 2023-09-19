@@ -32,62 +32,62 @@ public class ValuteCursesService {
     private ValuteCurseListXml parseXMLResponse(Response response) {
 
         //Jakarta XML parser
-//        try {
-//            JAXBContext jaxbContext = JAXBContext.newInstance(ValuteCurseListXml.class);
-//            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-//            ValuteCurseListXml cursesList = (ValuteCurseListXml) unmarshaller.unmarshal(Objects.
-//                    requireNonNull(response.body()).byteStream());
-//            return cursesList;
-//        } catch (JAXBException e) {
-//            throw new RuntimeException(e);
-//        }
-
-        // Simple StAX XML parser
-        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try {
-            XMLEventReader reader = xmlInputFactory.createXMLEventReader(Objects.requireNonNull(response.body())
-                    .byteStream());
-            ValuteCurseListXml valuteCurseListXml = new ValuteCurseListXml();
-            List<ValuteCursXml> cursesList = new ArrayList<>();
-            ValuteCursXml valuteCursXml = null;
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-            while (reader.hasNext()) {
-                XMLEvent nextEvent = reader.nextEvent();
-                if (nextEvent.isStartElement()) {
-                    StartElement startElement = nextEvent.asStartElement();
-                    Attribute url;
-                    switch (startElement.getName().getLocalPart()) {
-                        case "ValCurs" -> {
-                            url = startElement.getAttributeByName(new QName("Date"));
-                            if (url != null)
-                                valuteCurseListXml.setDate(dateFormat.parse(url.getValue()));
-                        }
-                        case "Valute" -> {
-                            valuteCursXml = new ValuteCursXml();
-                            url = startElement.getAttributeByName(new QName("ID"));
-                            if (url != null)
-                                valuteCursXml.setId(url.getValue());
-                        }
-                        case "Value" -> {
-                            nextEvent = reader.nextEvent();
-                            Objects.requireNonNull(valuteCursXml).setValue(Double.valueOf(nextEvent.
-                                    asCharacters().getData().replace(",", ".")));
-                        }
-                    }
-                }
-                if (nextEvent.isEndElement()) {
-                    EndElement endElement = nextEvent.asEndElement();
-                    if (endElement.getName().getLocalPart().equals("Valute")) {
-                        cursesList.add(valuteCursXml);
-                        valuteCursXml = null;
-                    }
-                }
-                valuteCurseListXml.setValuteCursXmls(cursesList);
-            }
-            return valuteCurseListXml;
-        } catch (XMLStreamException | ParseException e) {
+            JAXBContext jaxbContext = JAXBContext.newInstance(ValuteCurseListXml.class);
+            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+            ValuteCurseListXml cursesList = (ValuteCurseListXml) unmarshaller.unmarshal(Objects.
+                    requireNonNull(response.body()).byteStream());
+            return cursesList;
+        } catch (JAXBException e) {
             throw new RuntimeException(e);
         }
+
+        // Simple StAX XML parser
+//        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+//        try {
+//            XMLEventReader reader = xmlInputFactory.createXMLEventReader(Objects.requireNonNull(response.body())
+//                    .byteStream());
+//            ValuteCurseListXml valuteCurseListXml = new ValuteCurseListXml();
+//            List<ValuteCursXml> cursesList = new ArrayList<>();
+//            ValuteCursXml valuteCursXml = null;
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+//            while (reader.hasNext()) {
+//                XMLEvent nextEvent = reader.nextEvent();
+//                if (nextEvent.isStartElement()) {
+//                    StartElement startElement = nextEvent.asStartElement();
+//                    Attribute url;
+//                    switch (startElement.getName().getLocalPart()) {
+//                        case "ValCurs" -> {
+//                            url = startElement.getAttributeByName(new QName("Date"));
+//                            if (url != null)
+//                                valuteCurseListXml.setDate(dateFormat.parse(url.getValue()));
+//                        }
+//                        case "Valute" -> {
+//                            valuteCursXml = new ValuteCursXml();
+//                            url = startElement.getAttributeByName(new QName("ID"));
+//                            if (url != null)
+//                                valuteCursXml.setId(url.getValue());
+//                        }
+//                        case "Value" -> {
+//                            nextEvent = reader.nextEvent();
+//                            Objects.requireNonNull(valuteCursXml).setValue(Double.valueOf(nextEvent.
+//                                    asCharacters().getData().replace(",", ".")));
+//                        }
+//                    }
+//                }
+//                if (nextEvent.isEndElement()) {
+//                    EndElement endElement = nextEvent.asEndElement();
+//                    if (endElement.getName().getLocalPart().equals("Valute")) {
+//                        cursesList.add(valuteCursXml);
+//                        valuteCursXml = null;
+//                    }
+//                }
+//                valuteCurseListXml.setValuteCursXmls(cursesList);
+//            }
+//            return valuteCurseListXml;
+//        } catch (XMLStreamException | ParseException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
     private Map<String, Integer> calendarDiff(Calendar startC, Calendar endC){

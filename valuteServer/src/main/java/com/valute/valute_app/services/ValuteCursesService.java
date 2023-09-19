@@ -27,7 +27,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
-@EnableAsync
+    //Annotation for Schedule and Async
+//@EnableAsync
 public class ValuteCursesService {
     private final ValuteCursesRepository valuteCursesRepository;
     private Calendar dateC = Calendar.getInstance();
@@ -169,17 +170,18 @@ public class ValuteCursesService {
         }
     }
 
-    @Async
-    //@Scheduled(fixedRate = 2000)
-    protected void scheduleDownloadingData(){
-        downloadValuteCurses(dateC.getTime(), dateC.getTime());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-        System.out.println("<--- Загружены данные для даты: " + dateFormat.format(dateC.getTime()) + " --->");
-        System.out.println("Данные: ");
-        ValuteCursesSpecDto spec = new ValuteCursesSpecDto();
-        spec.setMinDate(dateC.getTime());
-        spec.setMaxDate(dateC.getTime());
-        System.out.println(getValuteCursesBySpec(spec));
-        dateC.add(Calendar.DAY_OF_MONTH, 1);
-    }
+    //Schedule function
+//    @Async
+//    @Scheduled(fixedRate = 2000)
+//    protected void scheduleDownloadingData(){
+//        downloadValuteCurses(dateC.getTime(), dateC.getTime());
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+//        System.out.println("<--- Загружены данные для даты: " + dateFormat.format(dateC.getTime()) + " --->");
+//        System.out.println("Данные: ");
+//        ValuteCursesSpecDto spec = new ValuteCursesSpecDto();
+//        spec.setMinDate(dateC.getTime());
+//        spec.setMaxDate(dateC.getTime());
+//        System.out.println(getValuteCursesBySpec(spec));
+//        dateC.add(Calendar.DAY_OF_MONTH, 1);
+//    }
 }
