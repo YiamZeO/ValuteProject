@@ -26,8 +26,7 @@ public class ValuteTypesService {
                     requireNonNull(response.body()).byteStream());
             return valuteList.getValuteTypeXmls();
         } catch (JAXBException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -46,8 +45,7 @@ public class ValuteTypesService {
             try (Response response = client.newCall(request).execute()) {
                 chunkOfXmlValutes = parseXMLResponse(response);
             } catch (Exception e) {
-                e.printStackTrace();
-                return null;
+                throw new RuntimeException(e);
             }
             d++;
         } while (chunkOfXmlValutes != null);

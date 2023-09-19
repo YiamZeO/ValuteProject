@@ -73,8 +73,7 @@ public class ValuteCursesService {
             allXmlCurses = objectMapper.readValue(responseBody, new TypeReference<>() {
             });
         } catch (Exception e) {
-            e.printStackTrace();
-            return;
+            throw new RuntimeException(e);
         }
         valuteCursesRepository.saveAll(allXmlCurses.stream().map(xmlCurses ->
                         xmlCurses.getValuteCursXmls().stream().map(xmlCurs ->
@@ -98,7 +97,7 @@ public class ValuteCursesService {
     }
 
     public byte[] getValuteCursesBySpecXml(ValuteCursesSpecDto valuteCursesSpecDto) {
-        byte[] bytes = {};
+        byte[] bytes;
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Курсы");
             createHeaderRowValuteCurses(sheet);
@@ -108,7 +107,7 @@ public class ValuteCursesService {
                 bytes = outputStream.toByteArray();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return bytes;
     }

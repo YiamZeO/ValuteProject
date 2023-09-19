@@ -1,5 +1,6 @@
 package com.valute.valutedownloadservice.services;
 
+import com.valute.xmldtos.DTOs.ValuteCursXml;
 import com.valute.xmldtos.DTOs.ValuteCurseListXml;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -12,6 +13,15 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
 
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.EndElement;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -20,15 +30,61 @@ import java.util.concurrent.*;
 public class ValuteCursesService {
 
     private ValuteCurseListXml parseXMLResponse(Response response) {
+//        try {
+//            JAXBContext jaxbContext = JAXBContext.newInstance(ValuteCurseListXml.class);
+//            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+//            ValuteCurseListXml cursesList = (ValuteCurseListXml) unmarshaller.unmarshal(Objects.
+//                    requireNonNull(response.body()).byteStream());
+//            return cursesList;
+//        } catch (JAXBException e) {
+//            throw new RuntimeException(e);
+//        }
+
+        // Simple StAX XML parser
+        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         try {
-            JAXBContext jaxbContext = JAXBContext.newInstance(ValuteCurseListXml.class);
-            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            ValuteCurseListXml cursesList = (ValuteCurseListXml) unmarshaller.unmarshal(Objects.
-                    requireNonNull(response.body()).byteStream());
-            return cursesList;
-        } catch (JAXBException e) {
-            e.printStackTrace();
-            return null;
+            XMLEventReader reader = xmlInputFactory.createXMLEventReader(Objects.requireNonNull(response.body())
+                    .byteStream());
+            ValuteCurseListXml valuteCurseListXml = new ValuteCurseListXml();
+            List<ValuteCursXml> cursesList = new ArrayList<>();
+            ValuteCursXml valuteCursXml = null;
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+            while (reader.hasNext()) {
+                XMLEvent nextEvent = reader.nextEvent();
+                if (nextEvent.isStartElement()) {
+                    StartElement startElement = nextEvent.asStartElement();
+                    Attribute url;
+                    switch (startElement.getName().getLocalPart()) {
+                        case "ValCurs" -> {
+                            url = startElement.getAttributeByName(new QName("Date"));
+                            if (url != null)
+                                valuteCurseListXml.setDate(dateFormat.parse(url.getValue()));
+                        }
+                        case "Valute" -> {
+                            valuteCursXml = new ValuteCursXml();
+                            url = startElement.getAttributeByName(new QName("ID"));
+                            if (url != null)
+                                valuteCursXml.setId(url.getValue());
+                        }
+                        case "Value" -> {
+                            nextEvent = reader.nextEvent();
+                            Objects.requireNonNull(valuteCursXml).setValue(Double.valueOf(nextEvent.
+                                    asCharacters().getData().replace(",", ".")));
+                        }
+                    }
+                }
+                if (nextEvent.isEndElement()) {
+                    EndElement endElement = nextEvent.asEndElement();
+                    if (endElement.getName().getLocalPart().equals("Valute")) {
+                        cursesList.add(valuteCursXml);
+                        valuteCursXml = null;
+                    }
+                }
+                valuteCurseListXml.setValuteCursXmls(cursesList);
+            }
+            return valuteCurseListXml;
+        } catch (XMLStreamException | ParseException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -85,8 +141,7 @@ public class ValuteCursesService {
                     try (Response response = client.newCall(request).execute()) {
                         chunkOfXmlCurses = parseXMLResponse(response);
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        return new ArrayList<>();
+                        throw new RuntimeException(e);
                     }
                     if (Objects.requireNonNull(chunkOfXmlCurses).getValuteCursXmls().stream()
                             .anyMatch(a -> a.getValue() == null))
@@ -121,33 +176,6 @@ public class ValuteCursesService {
         }
     }
 
-    public List<ValuteCurseListXml> downloadingValuteCursesFunc(Date startDate, Date endDate) {
-        List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
-        ValuteCurseListXml chunkOfXmlCurses;
-        Calendar date_req_start = Calendar.getInstance();
-        Calendar date_req_end = Calendar.getInstance();
-        date_req_start.setTime(startDate);
-        date_req_end.setTime(endDate);
-        OkHttpClient client = new OkHttpClient();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        while (date_req_start.before(date_req_end) || date_req_start.equals(date_req_end)) {
-            HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.
-                    parse("https://www.cbr.ru/scripts/XML_daily.asp")).newBuilder();
-            urlBuilder.addQueryParameter("date_req", dateFormat.format(date_req_start.getTime()));
-            String url = urlBuilder.build().toString();
-            Request request = new Request.Builder().url(url).build();
-            try (Response response = client.newCall(request).execute()) {
-                chunkOfXmlCurses = parseXMLResponse(response);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new ArrayList<>();
-            }
-            allXmlCurses.add(chunkOfXmlCurses);
-            date_req_start.add(Calendar.DAY_OF_MONTH, 1);
-        }
-        return allXmlCurses;
-    }
-
     public List<ValuteCurseListXml> downloadValuteCurses(Date startDate, Date endDate) {
         List<ValuteCurseListXml> allXmlCurses;
         try (ForkJoinPool forkJoinPool = new ForkJoinPool()) {
@@ -155,6 +183,8 @@ public class ValuteCursesService {
             allXmlCurses = forkJoinPool.invoke(task);
             return allXmlCurses;
         }
+
+        //Downloading with thread pool and ExecutorService
 //        List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
 //        Calendar startC = Calendar.getInstance();
 //        startC.setTime(startDate);
@@ -189,20 +219,49 @@ public class ValuteCursesService {
 //                }
 //                executorService.shutdown();
 //            } catch (ExecutionException | InterruptedException e) {
-//                e.printStackTrace();
+//                throw new RuntimeException(e);
 //            }
 //        }
 //        return allXmlCurses;
     }
-    @Data
-    @AllArgsConstructor
-    private class VuluteTask implements Callable<List<ValuteCurseListXml>>{
-        private Date d1;
-        private Date d2;
 
-        @Override
-        public List<ValuteCurseListXml> call() throws Exception {
-            return downloadingValuteCursesFunc(d1, d2);
-        }
-    }
+    //Function and class for thread pool and ExecutorService
+//    public List<ValuteCurseListXml> downloadingValuteCursesFunc(Date startDate, Date endDate) {
+//        List<ValuteCurseListXml> allXmlCurses = new ArrayList<>();
+//        ValuteCurseListXml chunkOfXmlCurses;
+//        Calendar date_req_start = Calendar.getInstance();
+//        Calendar date_req_end = Calendar.getInstance();
+//        date_req_start.setTime(startDate);
+//        date_req_end.setTime(endDate);
+//        OkHttpClient client = new OkHttpClient();
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+//        while (date_req_start.before(date_req_end) || date_req_start.equals(date_req_end)) {
+//            HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.
+//                    parse("https://www.cbr.ru/scripts/XML_daily.asp")).newBuilder();
+//            urlBuilder.addQueryParameter("date_req", dateFormat.format(date_req_start.getTime()));
+//            String url = urlBuilder.build().toString();
+//            Request request = new Request.Builder().url(url).build();
+//            try (Response response = client.newCall(request).execute()) {
+//                chunkOfXmlCurses = parseXMLResponse(response);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                throw new RuntimeException(e);
+//            }
+//            allXmlCurses.add(chunkOfXmlCurses);
+//            date_req_start.add(Calendar.DAY_OF_MONTH, 1);
+//        }
+//        return allXmlCurses;
+//    }
+//
+//    @Data
+//    @AllArgsConstructor
+//    private class VuluteTask implements Callable<List<ValuteCurseListXml>>{
+//        private Date d1;
+//        private Date d2;
+//
+//        @Override
+//        public List<ValuteCurseListXml> call() throws Exception {
+//            return downloadingValuteCursesFunc(d1, d2);
+//        }
+//    }
 }

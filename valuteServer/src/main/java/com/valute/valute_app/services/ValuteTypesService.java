@@ -47,8 +47,7 @@ public class ValuteTypesService {
             allXmlValutes = objectMapper.readValue(responseBody, new TypeReference<>() {
             });
         } catch (Exception e) {
-            e.printStackTrace();
-            return;
+            throw new RuntimeException(e);
         }
         valuteTypesRepository.saveAll(allXmlValutes.stream().map(ValuteType::new).toList());
     }
@@ -58,7 +57,7 @@ public class ValuteTypesService {
     }
 
     public byte[] getValuteTypesXml() {
-        byte[] bytes = {};
+        byte[] bytes;
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Валюты");
             createHeaderRowValuteTypes(sheet);
@@ -68,7 +67,7 @@ public class ValuteTypesService {
                 bytes = outputStream.toByteArray();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return bytes;
     }
