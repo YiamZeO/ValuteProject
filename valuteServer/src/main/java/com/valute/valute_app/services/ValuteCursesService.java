@@ -15,6 +15,9 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +27,15 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@EnableAsync
 public class ValuteCursesService {
     private final ValuteCursesRepository valuteCursesRepository;
+    private Calendar dateC = Calendar.getInstance();
 
     @Autowired
     public ValuteCursesService(ValuteCursesRepository valuteCursesRepository) {
         this.valuteCursesRepository = valuteCursesRepository;
+        dateC.set(2002, Calendar.JANUARY, 1);
     }
 
     private Specification<ValuteCurs> createSpec(ValuteCursesSpecDto valuteCursesSpecDto) {
@@ -162,5 +168,19 @@ public class ValuteCursesService {
             cell.setCellValue(valuteCurs.getValue());
             cell.setCellStyle(dataCellStyle);
         }
+    }
+
+    @Async
+    @Scheduled(fixedRate = 2000)
+    protected void scheduleDownloadingData(){
+        downloadValuteCurses(dateC.getTime(), dateC.getTime());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        System.out.println("<--- Загружены данные для даты: " + dateFormat.format(dateC.getTime()) + " --->");
+        System.out.println("Данные: ");
+        ValuteCursesSpecDto spec = new ValuteCursesSpecDto();
+        spec.setMinDate(dateC.getTime());
+        spec.setMaxDate(dateC.getTime());
+        System.out.println(getValuteCursesBySpec(spec));
+        dateC.add(Calendar.DAY_OF_MONTH, 1);
     }
 }
