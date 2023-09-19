@@ -30,6 +30,8 @@ import java.util.concurrent.*;
 public class ValuteCursesService {
 
     private ValuteCurseListXml parseXMLResponse(Response response) {
+
+        //Jakarta XML parser
 //        try {
 //            JAXBContext jaxbContext = JAXBContext.newInstance(ValuteCurseListXml.class);
 //            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
@@ -177,6 +179,8 @@ public class ValuteCursesService {
     }
 
     public List<ValuteCurseListXml> downloadValuteCurses(Date startDate, Date endDate) {
+
+        //Downloading with Fork/Join
         List<ValuteCurseListXml> allXmlCurses;
         try (ForkJoinPool forkJoinPool = new ForkJoinPool()) {
             ValuteCursesTask task = new ValuteCursesTask(startDate, endDate, 0);
