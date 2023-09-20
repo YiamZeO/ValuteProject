@@ -35,9 +35,8 @@ public class ValuteCursesService {
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(ValuteCurseListXml.class);
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            ValuteCurseListXml cursesList = (ValuteCurseListXml) unmarshaller.unmarshal(Objects.
+            return (ValuteCurseListXml) unmarshaller.unmarshal(Objects.
                     requireNonNull(response.body()).byteStream());
-            return cursesList;
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }
