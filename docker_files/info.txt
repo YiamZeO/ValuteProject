@@ -1,0 +1,16 @@
+Services names
+vaulutedownloader - downloader
+valuteserver - server
+valutedb - postgres
+valutezuulserver - zuul server
+
+Databse backup
+pg_restore -d valutedb -U postgres < backup/backup.sql
+
+Docker compose
+docker compose up -d
+docker compose down
+
+Docker Swarm
+docker stack deploy -c compose.yml valute_app
+docker stack rm valute_app

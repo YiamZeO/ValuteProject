@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+ valutedb:
+  image: postgres:latest
+  deploy:
+   replicas: 2
+  volumes:
+   - C:\docker_files\database_memory:/var/lib/postgresql/data
+   - C:\docker_files\backup:/backup
+  environment:
+   POSTGRES_USER: "postgres"
+   POSTGRES_PASSWORD: "admin"
+   POSTGRES_DB: "valutedb"
+ valutezuulserver:
+  image: valute_zuul_server
+  deploy:
+   replicas: 2
+  ports:
+   - "8080:8080"
+ vaulutedownloader:
+  image: valute_download_service
+  deploy:
+   replicas: 2
+ valuteserver:
+  image: valute_server
+  deploy:
+   replicas: 2
