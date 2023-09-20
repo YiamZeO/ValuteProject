@@ -10,6 +10,7 @@
         <module name="valuteDownloadService" />
         <module name="valuteServer" />
         <module name="xmlDTOs" />
+        <module name="zuulServer" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -21,6 +22,7 @@
       <module name="valuteDownloadService" options="-parameters" />
       <module name="valuteServer" options="-parameters" />
       <module name="xmlDTOs" options="-parameters" />
+      <module name="zuulServer" options="-parameters" />
     </option>
   </component>
 </project>

@@ -8,6 +8,7 @@
         <option value="$PROJECT_DIR$/valuteDownloadService/pom.xml" />
         <option value="$PROJECT_DIR$/valuteServer/pom.xml" />
         <option value="$PROJECT_DIR$/xmlDTOs/pom.xml" />
+        <option value="$PROJECT_DIR$/zuulServer/pom.xml" />
       </list>
     </option>
   </component>

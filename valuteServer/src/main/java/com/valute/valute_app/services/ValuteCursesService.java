@@ -62,7 +62,7 @@ public class ValuteCursesService {
                 .readTimeout(0, TimeUnit.MILLISECONDS)
                 .build();;
         HttpUrl.Builder urlBuilder = (Objects.requireNonNull(HttpUrl.
-                parse("http://localhost:8081/valute_curses/download_valute_curses"))).newBuilder();
+                parse("http://localhost:8082/valute_curses/download_valute_curses"))).newBuilder();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         urlBuilder.addQueryParameter("startDate", dateFormat.format(startDate));
         urlBuilder.addQueryParameter("endDate", dateFormat.format(endDate));

@@ -38,7 +38,7 @@ public class ValuteTypesService {
         List<ValuteTypeXml> allXmlValutes;
         OkHttpClient client = new OkHttpClient();
         HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.
-                parse("http://localhost:8081/valute_types/download_valute_types")).newBuilder();
+                parse("http://localhost:8082/valute_types/download_valute_types")).newBuilder();
         String url = urlBuilder.build().toString();
         Request request = new Request.Builder().url(url).build();
         try (Response response = client.newCall(request).execute()) {
