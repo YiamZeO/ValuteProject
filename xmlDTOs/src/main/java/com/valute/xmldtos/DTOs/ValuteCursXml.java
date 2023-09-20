@@ -21,20 +21,15 @@ public class ValuteCursXml {
     private Double value;
 
     public static class DoubleAdapter extends XmlAdapter<String, Double> {
-        private final NumberFormat numberFormat;
-
-        public DoubleAdapter() {
-            numberFormat = NumberFormat.getInstance(Locale.getDefault());
-        }
 
         @Override
-        public Double unmarshal(String value) throws Exception {
-            return numberFormat.parse(value).doubleValue();
+        public Double unmarshal(String value) {
+            return Double.valueOf(value.replace(",", "."));
         }
 
         @Override
         public String marshal(Double value) {
-            return numberFormat.format(value);
+            return String.valueOf(value);
         }
     }
 }
